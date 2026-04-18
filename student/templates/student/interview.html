@@ -1,0 +1,816 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Interview Session - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">
+                            <i class="bi bi-mic-fill text-primary"></i> AI Interview Session
+                        </h1>
+                        <p class="text-muted mb-0">Real-time voice interview with AI</p>
+                    </div>
+                    <div class="text-end">
+                        <div id="timer" class="badge bg-info fs-6">00:00</div>
+                        <div class="small text-muted">Duration</div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-2">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div id="micStatus" class="me-2">
+                                        <i class="bi bi-mic-mute-fill text-danger"></i>
+                                    </div>
+                                    <span class="small">Microphone</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-2">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div id="aiStatus" class="me-2">
+                                        <i class="bi bi-robot text-muted"></i>
+                                    </div>
+                                    <span class="small">AI Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-2">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div id="connectionStatus" class="me-2">
+                                        <i class="bi bi-wifi text-warning"></i>
+                                    </div>
+                                    <span class="small">Connection</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="conversationArea" class="border rounded-3 p-3 mb-4" style="height: 400px; overflow-y: auto; background: #f8f9fa;">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-mic display-1 mb-3"></i>
+                        <h5>Ready to start your interview?</h5>
+                        <p>The interview will ask 5 questions and then finish automatically.</p>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <button id="start-btn" class="btn btn-gradient btn-lg px-4">
+                        <i class="bi bi-play-circle"></i> Start Interview
+                    </button>
+                    <button id="pause-btn" class="btn btn-outline-warning btn-lg px-4" style="display: none;">
+                        <i class="bi bi-pause-circle"></i> Pause
+                    </button>
+                    <button id="stop-btn" class="btn btn-outline-danger btn-lg px-4" style="display: none;">
+                        <i class="bi bi-stop-circle"></i> End Interview
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card p-4 mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-lightbulb text-warning"></i> Interview Tips
+                </h5>
+                <ul class="small">
+                    <li>Speak clearly and at a moderate pace</li>
+                    <li>Take a moment to think before answering</li>
+                    <li>Provide specific examples when possible</li>
+                    <li>Be honest and authentic in your responses</li>
+                    <li>Ensure you're in a quiet environment</li>
+                </ul>
+            </div>
+
+            <div class="glass-card p-4 mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-graph-up text-success"></i> Session Progress
+                </h5>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Questions Asked</span>
+                        <span id="questionCount">0 / 5</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="questionProgress" class="progress-bar bg-success" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Answers Submitted</span>
+                        <span id="answerCount">0 / 5</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="answerProgress" class="progress-bar bg-info" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="small text-muted">
+                    Elapsed time: <span id="timeElapsed">00:00</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-lightning text-primary"></i> Quick Actions
+                </h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="repeatLastQuestion()">
+                        <i class="bi bi-arrow-repeat"></i> Repeat Question
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="skipQuestion()">
+                        <i class="bi bi-skip-forward"></i> Skip Question
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="takeBreak()">
+                        <i class="bi bi-pause"></i> Request Break
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="endInterviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle text-success"></i> Interview Completed
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>The interview session has ended.</p>
+                <div id="interviewSummary"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review Answers</button>
+                <button type="button" class="btn btn-primary" onclick="window.location.href='/student/thankyou/?from_interview=true'">View Results</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const startBtn = document.getElementById("start-btn");
+    const pauseBtn = document.getElementById("pause-btn");
+    const stopBtn = document.getElementById("stop-btn");
+    const conversationArea = document.getElementById("conversationArea");
+    const micStatus = document.getElementById("micStatus");
+    const aiStatus = document.getElementById("aiStatus");
+    const connectionStatus = document.getElementById("connectionStatus");
+    const questionCountEl = document.getElementById("questionCount");
+    const answerCountEl = document.getElementById("answerCount");
+    const questionProgressEl = document.getElementById("questionProgress");
+    const answerProgressEl = document.getElementById("answerProgress");
+    const timeElapsedEl = document.getElementById("timeElapsed");
+    const timerEl = document.getElementById("timer");
+
+    const MAX_QUESTIONS = 5;
+    const ECHO_GUARD_MS = 2500;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+    const synth = window.speechSynthesis;
+
+    if (recognition) {
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.continuous = false;
+    }
+
+    const userId = "{{ user.userId|default:'' }}";
+    const userName = "{{ user.userName|default:''|escapejs }}";
+
+    let isStarted = false;
+    let isPaused = false;
+    let isSpeaking = false;
+    let isListening = false;
+    let timerInterval = null;
+    let startTimestamp = null;
+    let elapsedBeforePause = 0;
+    let questionsAsked = 0;
+    let answersSubmitted = 0;
+    let skippedQuestions = 0;
+    let currentQuestion = "";
+    let lastQuestion = "";
+    let lastAiReply = "";
+    let ignoreTranscriptUntil = 0;
+    let finalizingInterview = false;
+    let hasSavedResult = false;
+    let conversationHistory = [];
+let lastSavedQuestion = "";
+let lastSavedAnswer = "";
+let lastSaveTime = 0;
+
+    function formatDuration(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function getElapsedSeconds() {
+        if (!startTimestamp) {
+            return Math.floor(elapsedBeforePause / 1000);
+        }
+        return Math.floor((elapsedBeforePause + (Date.now() - startTimestamp)) / 1000);
+    }
+
+    function startTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        startTimestamp = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
+    }
+
+    function pauseTimer() {
+        if (startTimestamp) {
+            elapsedBeforePause += Date.now() - startTimestamp;
+            startTimestamp = null;
+        }
+        clearInterval(timerInterval);
+        timerInterval = null;
+        updateTimer();
+    }
+
+    function stopTimer() {
+        pauseTimer();
+    }
+
+    function updateTimer() {
+        const formatted = formatDuration(getElapsedSeconds());
+        timerEl.textContent = formatted;
+        timeElapsedEl.textContent = formatted;
+    }
+
+    function updateProgress() {
+        questionCountEl.textContent = `${questionsAsked} / ${MAX_QUESTIONS}`;
+        answerCountEl.textContent = `${answersSubmitted} / ${MAX_QUESTIONS}`;
+        questionProgressEl.style.width = `${(questionsAsked / MAX_QUESTIONS) * 100}%`;
+        answerProgressEl.style.width = `${(answersSubmitted / MAX_QUESTIONS) * 100}%`;
+    }
+
+    function updateStatus(type, status) {
+        const statusMap = {
+            mic: {
+                active: '<i class="bi bi-mic-fill text-success"></i>',
+                muted: '<i class="bi bi-mic-mute-fill text-danger"></i>',
+                listening: '<i class="bi bi-mic-fill text-warning animate__animated animate__pulse"></i>'
+            },
+            ai: {
+                idle: '<i class="bi bi-robot text-muted"></i>',
+                speaking: '<i class="bi bi-robot text-success animate__animated animate__pulse"></i>',
+                thinking: '<i class="bi bi-robot text-warning animate__animated animate__pulse"></i>'
+            },
+            connection: {
+                connected: '<i class="bi bi-wifi text-success"></i>',
+                connecting: '<i class="bi bi-wifi text-warning"></i>',
+                disconnected: '<i class="bi bi-wifi-off text-danger"></i>'
+            }
+        };
+
+        const elements = { mic: micStatus, ai: aiStatus, connection: connectionStatus };
+        if (elements[type] && statusMap[type] && statusMap[type][status]) {
+            elements[type].innerHTML = statusMap[type][status];
+        }
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function addMessage(sender, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message mb-3 animate__animated animate__fadeIn';
+
+        const senderConfig = {
+            user: {
+                icon: '<i class="bi bi-person-circle text-primary"></i>',
+                name: userName || 'You',
+                alertClass: 'alert-primary'
+            },
+            ai: {
+                icon: '<i class="bi bi-robot text-success"></i>',
+                name: 'AI Interviewer',
+                alertClass: 'alert-success'
+            },
+            system: {
+                icon: '<i class="bi bi-info-circle text-secondary"></i>',
+                name: 'System',
+                alertClass: 'alert-secondary'
+            }
+        }[sender] || {
+            icon: '<i class="bi bi-info-circle text-secondary"></i>',
+            name: 'System',
+            alertClass: 'alert-secondary'
+        };
+
+        messageDiv.innerHTML = `
+            <div class="d-flex align-items-start mb-2">
+                <div class="me-2">${senderConfig.icon}</div>
+                <div class="flex-grow-1">
+                    <strong>${senderConfig.name}</strong>
+                    <small class="text-muted ms-2">${new Date().toLocaleTimeString()}</small>
+                </div>
+            </div>
+            <div class="alert ${senderConfig.alertClass} mb-0">
+                ${escapeHtml(message)}
+            </div>
+        `;
+
+        conversationArea.appendChild(messageDiv);
+        conversationArea.scrollTop = conversationArea.scrollHeight;
+
+        conversationHistory.push({
+            sender,
+            message,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    function normalizeText(text) {
+        return (text || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9 ]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function looksLikeAiEcho(transcript) {
+        const normalizedTranscript = normalizeText(transcript);
+        const normalizedAiReply = normalizeText(lastAiReply);
+
+        if (!normalizedTranscript || !normalizedAiReply) {
+            return false;
+        }
+
+        return normalizedTranscript === normalizedAiReply ||
+            normalizedAiReply.includes(normalizedTranscript) ||
+            normalizedTranscript.includes(normalizedAiReply);
+    }
+
+    function stopListening() {
+        if (!recognition || !isListening) {
+            return;
+        }
+        isListening = false;
+        try {
+            recognition.abort();
+        } catch (error) {
+            console.debug('Recognition abort skipped:', error);
+        }
+        updateStatus('mic', 'muted');
+    }
+
+    function startListening(delay = 0) {
+        if (!recognition || !isStarted || isPaused || isSpeaking || finalizingInterview || questionsAsked === 0) {
+            return;
+        }
+
+        const launch = () => {
+            if (!recognition || !isStarted || isPaused || isSpeaking || finalizingInterview) {
+                return;
+            }
+            if (isListening) {
+                return;
+            }
+            isListening = true;
+            updateStatus('mic', 'listening');
+            try {
+                recognition.start();
+            } catch (error) {
+                isListening = false;
+                updateStatus('mic', 'muted');
+                console.debug('Recognition start blocked:', error);
+            }
+        };
+
+        if (delay > 0) {
+            setTimeout(launch, delay);
+        } else {
+            launch();
+        }
+    }
+
+    async function saveInterviewTurn(question, answer) {
+        if (!userId || !question) {
+            return;
+        }
+
+        // Prevent duplicate saves - check if same Q&A was saved within last 5 seconds
+        const currentTime = Date.now();
+        if (lastSavedQuestion === question && lastSavedAnswer === answer && (currentTime - lastSaveTime) < 5000) {
+            console.log('Prevented duplicate save for:', question.substring(0, 50) + '...');
+            return;
+        }
+
+        try {
+            await fetch('/student/saveInterview/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    question: question,
+                    answer: answer || '[No answer submitted]'
+                })
+            });
+            
+            // Update last saved values
+            lastSavedQuestion = question;
+            lastSavedAnswer = answer;
+            lastSaveTime = currentTime;
+        } catch (error) {
+            console.error('Failed to save interview turn:', error);
+        }
+    }
+
+    async function saveInterviewResult(summary) {
+        if (!userId || hasSavedResult) {
+            return;
+        }
+
+        try {
+            await fetch('/student/saveInterviewResult/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    result_summary: summary
+                })
+            });
+            hasSavedResult = true;
+        } catch (error) {
+            console.error('Failed to save interview result:', error);
+        }
+    }
+
+    function buildSummary() {
+        return `Answered ${answersSubmitted}/${MAX_QUESTIONS}, skipped ${skippedQuestions}.`;
+    }
+
+    async function speakAiReply(reply) {
+        stopListening();
+        lastAiReply = reply;
+        ignoreTranscriptUntil = Date.now() + ECHO_GUARD_MS;
+        addMessage('ai', reply);
+        updateStatus('ai', 'speaking');
+        isSpeaking = true;
+
+        return new Promise((resolve) => {
+            const utter = new SpeechSynthesisUtterance(reply);
+            utter.onend = () => {
+                isSpeaking = false;
+                updateStatus('ai', 'idle');
+                ignoreTranscriptUntil = Date.now() + ECHO_GUARD_MS;
+                resolve();
+            };
+            utter.onerror = () => {
+                isSpeaking = false;
+                updateStatus('ai', 'idle');
+                resolve();
+            };
+            synth.cancel();
+            synth.speak(utter);
+        });
+    }
+
+    async function requestAiReply(message) {
+        const response = await fetch('http://127.0.0.1:5679/webhook/voicechatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                user_id: String(userId)
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.reply || "Sorry, I didn't understand that.";
+    }
+
+    async function askQuestion(promptMessage) {
+        updateStatus('ai', 'thinking');
+        stopListening();
+
+        try {
+            const reply = await requestAiReply(promptMessage);
+            questionsAsked += 1;
+            currentQuestion = reply;
+            lastQuestion = reply;
+            updateProgress();
+            await speakAiReply(reply);
+            if (questionsAsked < MAX_QUESTIONS) {
+                startListening(ECHO_GUARD_MS);
+            } else {
+                addMessage('system', 'Final question asked. Answer it to complete the interview.');
+                startListening(ECHO_GUARD_MS);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            addMessage('system', 'Error communicating with AI. Please try again.');
+            updateStatus('connection', 'disconnected');
+            updateStatus('ai', 'idle');
+        }
+    }
+
+    async function completeInterview(reasonMessage) {
+        if (finalizingInterview) {
+            return;
+        }
+
+        finalizingInterview = true;
+        isStarted = false;
+        isPaused = false;
+        stopListening();
+        synth.cancel();
+        stopTimer();
+        updateStatus('mic', 'muted');
+        updateStatus('ai', 'idle');
+        updateStatus('connection', 'connected');
+        pauseBtn.style.display = 'none';
+        stopBtn.style.display = 'none';
+        startBtn.style.display = 'inline-block';
+        startBtn.disabled = true;
+
+        if (reasonMessage) {
+            addMessage('system', reasonMessage);
+        }
+
+        const summary = buildSummary();
+        await saveInterviewResult(summary);
+
+        document.getElementById('interviewSummary').innerHTML = `
+            <div class="alert alert-info">
+                <strong>Session Summary:</strong><br>
+                Duration: ${timerEl.textContent}<br>
+                Questions asked: ${questionsAsked}<br>
+                Answers submitted: ${answersSubmitted}
+            </div>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById('endInterviewModal'));
+        modal.show();
+    }
+
+    async function handleUserResponse(transcript) {
+        const answer = transcript.trim();
+        if (!answer) {
+            startListening(500);
+            return;
+        }
+
+        addMessage('user', answer);
+        updateStatus('mic', 'muted');
+        answersSubmitted += 1;
+        updateProgress();
+        await saveInterviewTurn(currentQuestion || lastQuestion, answer);
+
+        if (questionsAsked >= MAX_QUESTIONS) {
+            await completeInterview('Interview finished after 5 questions.');
+            return;
+        }
+
+        await askQuestion(answer);
+    }
+
+    if (recognition) {
+        recognition.onresult = async (event) => {
+            isListening = false;
+            updateStatus('mic', 'muted');
+
+            if (!event.results || !event.results.length || !event.results[0].length) {
+                startListening(800);
+                return;
+            }
+
+            const transcript = event.results[0][0].transcript || '';
+            const cleanedTranscript = transcript.trim();
+            if (!cleanedTranscript) {
+                startListening(800);
+                return;
+            }
+
+            if (Date.now() < ignoreTranscriptUntil || looksLikeAiEcho(cleanedTranscript)) {
+                console.debug('Ignored possible AI echo:', cleanedTranscript);
+                startListening(ECHO_GUARD_MS);
+                return;
+            }
+
+            await handleUserResponse(cleanedTranscript);
+        };
+
+        recognition.onerror = (event) => {
+            isListening = false;
+            updateStatus('mic', 'muted');
+            if (event.error !== 'aborted') {
+                console.error('Speech recognition error:', event.error);
+            }
+            if (isStarted && !isPaused && !isSpeaking && !finalizingInterview) {
+                startListening(1500);
+            }
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            updateStatus('mic', 'muted');
+            if (isStarted && !isPaused && !isSpeaking && !finalizingInterview) {
+                startListening(1500);
+            }
+        };
+    }
+
+    startBtn.onclick = async () => {
+        if (!recognition) {
+            showAlert('Speech recognition is not supported in this browser.', 'danger');
+            return;
+        }
+        if (!userId) {
+            showAlert('Student session not found. Please login again.', 'danger');
+            window.location.href = '/student/login/';
+            return;
+        }
+        if (isStarted || finalizingInterview) {
+            return;
+        }
+
+        isStarted = true;
+        isPaused = false;
+        finalizingInterview = false;
+        hasSavedResult = false;
+        questionsAsked = 0;
+        answersSubmitted = 0;
+        skippedQuestions = 0;
+        currentQuestion = '';
+        lastQuestion = '';
+        lastAiReply = '';
+        ignoreTranscriptUntil = 0;
+        elapsedBeforePause = 0;
+        conversationHistory = [];
+        lastSavedQuestion = '';
+        lastSavedAnswer = '';
+        lastSaveTime = 0;
+        updateProgress();
+
+        startBtn.style.display = 'none';
+        pauseBtn.style.display = 'inline-block';
+        stopBtn.style.display = 'inline-block';
+        conversationArea.innerHTML = '';
+        addMessage('system', 'Interview started. The AI will ask 5 questions.');
+        updateStatus('connection', 'connected');
+        startTimer();
+
+        await askQuestion('Please ask the first interview question. Ask only one concise interview question.');
+    };
+
+    pauseBtn.onclick = () => {
+        if (!isStarted || finalizingInterview) {
+            return;
+        }
+
+        if (isPaused) {
+            isPaused = false;
+            pauseBtn.innerHTML = '<i class="bi bi-pause-circle"></i> Pause';
+            pauseBtn.classList.remove('btn-success');
+            pauseBtn.classList.add('btn-outline-warning');
+            startTimer();
+            startListening(600);
+        } else {
+            isPaused = true;
+            pauseBtn.innerHTML = '<i class="bi bi-play-circle"></i> Resume';
+            pauseBtn.classList.remove('btn-outline-warning');
+            pauseBtn.classList.add('btn-success');
+            stopListening();
+            pauseTimer();
+        }
+    };
+
+    stopBtn.onclick = async () => {
+        if (confirm('Are you sure you want to end the interview?')) {
+            await completeInterview('Interview ended by student.');
+        }
+    };
+
+    async function repeatLastQuestion() {
+        if (!lastQuestion) {
+            showAlert('No question has been asked yet.', 'warning');
+            return;
+        }
+        await speakAiReply(lastQuestion);
+        startListening(ECHO_GUARD_MS);
+    }
+
+    async function skipQuestion() {
+        if (!isStarted || finalizingInterview) {
+            return;
+        }
+        if (questionsAsked >= MAX_QUESTIONS) {
+            showAlert('This is already the final question.', 'warning');
+            return;
+        }
+        if (!confirm('Skip this question and move to the next one?')) {
+            return;
+        }
+
+        await saveInterviewTurn(currentQuestion || lastQuestion, '[Question skipped]');
+        skippedQuestions += 1;
+        updateProgress();
+        addMessage('system', 'Question skipped.');
+
+        if (questionsAsked >= MAX_QUESTIONS) {
+            await completeInterview('Interview finished after 5 questions.');
+            return;
+        }
+
+        await askQuestion('The student skipped the previous question. Ask the next interview question only.');
+    }
+
+    function takeBreak() {
+        if (!isStarted || finalizingInterview) {
+            return;
+        }
+
+        if (isPaused) {
+            showAlert('Interview is already paused.', 'warning');
+            return;
+        }
+
+        addMessage('system', 'Break requested. Interview paused.');
+        isPaused = true;
+        pauseBtn.innerHTML = '<i class="bi bi-play-circle"></i> Resume';
+        pauseBtn.classList.remove('btn-outline-warning');
+        pauseBtn.classList.add('btn-success');
+        stopListening();
+        pauseTimer();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStatus('connection', 'connecting');
+        updateStatus('mic', 'muted');
+        updateStatus('ai', 'idle');
+        updateProgress();
+        updateTimer();
+    });
+</script>
+
+<style>
+.message {
+    max-width: 100%;
+}
+
+.alert {
+    border-radius: 15px;
+    border: none;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.card {
+    border-radius: 15px;
+    border: none;
+}
+
+#conversationArea {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.animate__animated.animate__pulse {
+    animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+}
+</style>
+{% endblock %}

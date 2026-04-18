@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+
+{% block title %}View Answers - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="glass-card p-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="page-title">
+                    <i class="bi bi-clipboard-data"></i> Evaluate Student Answers
+                </h3>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm" onclick="submitAllMarks()" id="submitBtn" disabled>
+                        <i class="bi bi-check-circle"></i> Submit All Marks
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearForm()">
+                        <i class="bi bi-arrow-clockwise"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Student Selection -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="bi bi-person-badge text-primary"></i> Student Selection
+                            </h6>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-hash"></i>
+                                </span>
+                                <input type="number" class="form-control" id="studentId" placeholder="Enter Student ID" min="1">
+                                <button class="btn btn-primary" onclick="fetchAnswers()">
+                                    <i class="bi bi-search"></i> Fetch Answers
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="bi bi-info-circle text-info"></i> Evaluation Summary
+                            </h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="stat-item">
+                                        <small class="text-muted">Total Possible</small>
+                                        <div class="stat-value h4 text-success mb-0" id="totalPossibleMarks">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-item">
+                                        <small class="text-muted">Total Awarded</small>
+                                        <div class="stat-value h4 text-info mb-0" id="totalAwardedMarks">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-item">
+                                        <small class="text-muted">Score</small>
+                                        <div class="stat-value h4 text-warning mb-0" id="percentageScore">0%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Fetching student answers...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-5">
+                <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                <h4 class="mt-3 text-muted">No Answers Loaded</h4>
+                <p class="text-muted">Enter a student ID and click "Fetch Answers" to begin evaluation</p>
+            </div>
+
+            <!-- Answers Container -->
+            <div id="answersContainer" style="display: none;">
+                <!-- Answers will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle-fill text-success"></i> Success
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-check-circle-fill text-success display-4"></i>
+                <h5 class="mt-3">Marks Saved Successfully!</h5>
+                <p class="text-muted">Student marks have been recorded in the system.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="clearForm()">Evaluate Another Student</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let answers = [];
+    let currentStudentId = null;
+
+    function fetchAnswers() {
+        const studentId = document.getElementById("studentId").value;
+        
+        if (!studentId) {
+            showAlert('Please enter a valid Student ID', 'warning');
+            return;
+        }
+
+        // Show loading state
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('answersContainer').style.display = 'none';
+
+        fetch(`/student/getStudentAnswers/?id=${studentId}`)
+            .then(res => {
+                console.log('Response status:', res.status);
+                console.log('Response URL:', res.url);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                answers = data.answers || [];
+                currentStudentId = studentId;
+                displayAnswers();
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    updateSummary();
+                }, 100);
+                
+                // Hide loading, show content
+                document.getElementById('loadingState').style.display = 'none';
+                
+                if (answers.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    showAlert('No written test answers found for this student. Student may need to take the written test first.', 'info');
+                } else {
+                    document.getElementById('answersContainer').style.display = 'block';
+                    document.getElementById('submitBtn').disabled = false;
+                    showAlert(`Loaded ${answers.length} written test answers for evaluation`, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                console.error('Student ID:', studentId);
+                console.error('Full URL:', `/student/getStudentAnswers/?id=${studentId}`);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                showAlert(`Failed to fetch answers: ${error.message}. Please check the student ID.`, 'danger');
+            });
+    }
+
+    function displayAnswers() {
+        const container = document.getElementById("answersContainer");
+        container.innerHTML = "";
+
+        answers.forEach((item, idx) => {
+            const questionCard = document.createElement("div");
+            questionCard.className = "card mb-4 border-0 shadow-sm";
+            questionCard.innerHTML = `
+                <div class="card-header bg-light py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <span class="badge bg-primary me-2">Q${idx + 1}</span>
+                            Question ID: ${item.question_id}
+                        </h6>
+                        <div class="d-flex align-items-center gap-3">
+                            <label class="mb-0 fw-bold">Marks:</label>
+                            <div class="input-group" style="width: 150px;">
+                                <input type="number" 
+                                       class="form-control marks-input" 
+                                       data-id="${item.question_id}" 
+                                       data-index="${idx}"
+                                       min="0" 
+                                       max="${item.max_marks || 10}" 
+                                       value="${item.marks || 0}"
+                                       placeholder="0"
+                                       onchange="updateSummary()">
+                                <span class="input-group-text">/${item.max_marks || 10}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="bi bi-question-circle"></i> Question
+                            </h6>
+                            <p class="mb-3">${item.question}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">
+                                <i class="bi bi-chat-left-text"></i> Student Answer
+                            </h6>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-0">${item.answer}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(questionCard);
+        });
+    }
+
+    function updateSummary() {
+        console.log('updateSummary called');
+        console.log('answers data:', answers);
+        
+        // Wait for DOM elements to be available
+        const checkElements = () => {
+            const marksInputs = document.querySelectorAll('.marks-input');
+            const totalPossibleMarksEl = document.getElementById('totalPossibleMarks');
+            const totalAwardedMarksEl = document.getElementById('totalAwardedMarks');
+            const percentageEl = document.getElementById('percentageScore');
+            
+            if (marksInputs.length > 0 && totalPossibleMarksEl && totalAwardedMarksEl && percentageEl && answers.length > 0) {
+                let totalAwardedMarks = 0;
+                let totalPossibleMarks = 0;
+
+                // Calculate total possible marks from answers data
+                answers.forEach(item => {
+                    totalPossibleMarks += (item.max_marks || 10);
+                });
+
+                marksInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    totalAwardedMarks += value;
+                });
+
+                const percentage = totalPossibleMarks > 0 ? ((totalAwardedMarks / totalPossibleMarks) * 100).toFixed(1) : 0;
+
+                totalPossibleMarksEl.textContent = totalPossibleMarks;
+                totalAwardedMarksEl.textContent = totalAwardedMarks;
+                
+                // Update percentage display if element exists
+                if (percentageEl) {
+                    percentageEl.textContent = `${percentage}%`;
+                }
+                
+                return true; // Success
+            }
+            return false; // Elements not ready
+        };
+
+        // Try immediately, then retry if needed
+        if (!checkElements()) {
+            setTimeout(() => {
+                if (!checkElements()) {
+                    setTimeout(() => {
+                        checkElements();
+                    }, 200);
+                }
+            }, 100);
+        }
+    }
+
+    
+    function submitAllMarks() {
+        if (!currentStudentId) {
+            showAlert('Please fetch student answers first', 'warning');
+            return;
+        }
+
+        const marksInputs = document.querySelectorAll('.marks-input');
+        const marks = [];
+        let allFilled = true;
+
+        marksInputs.forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            if (value === 0) {
+                allFilled = false;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+            marks.push({
+                question_id: input.dataset.id,
+                marks: value
+            });
+        });
+
+        if (!allFilled) {
+            showAlert('Please provide marks for all questions', 'warning');
+            return;
+        }
+
+        const totalMarks = marks.reduce((sum, m) => sum + m.marks, 0);
+
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        submitBtn.disabled = true;
+
+        fetch("/student/saveStudentMarks/", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                user_id: currentStudentId, 
+                total_marks: totalMarks,
+                marks: marks
+            })
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Failed to save marks');
+            }
+            return res.json();
+        })
+        .then(data => {
+            // Show success modal
+            const modal = new bootstrap.Modal(document.getElementById('successModal'));
+            modal.show();
+            
+            // Reset submit button
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            
+            // Refresh the data to show updated marks and grade
+            setTimeout(() => {
+                fetchAnswers();
+            }, 1000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Failed to save marks. Please try again.', 'danger');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+
+    function clearForm() {
+        document.getElementById('studentId').value = '';
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('answersContainer').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('totalPossibleMarks').textContent = '0';
+        document.getElementById('totalAwardedMarks').textContent = '0';
+        document.getElementById('percentageScore').textContent = '0%';
+        document.getElementById('answersContainer').innerHTML = '';
+        answers = [];
+        currentStudentId = null;
+        
+        // Close success modal if open
+        const modal = bootstrap.Modal.getInstance(document.getElementById('successModal'));
+        if (modal) {
+            modal.hide();
+        }
+    }
+
+    // Allow Enter key to fetch answers
+    document.getElementById('studentId').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            fetchAnswers();
+        }
+    });
+</script>
+
+<style>
+.stat-item {
+    padding: 0.5rem;
+}
+
+.stat-value {
+    font-weight: 700;
+}
+
+.marks-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.marks-input.is-invalid {
+    border-color: #dc3545;
+}
+
+.card-header {
+    border-bottom: 2px solid #e9ecef;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.input-group-text {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+</style>
+{% endblock %}

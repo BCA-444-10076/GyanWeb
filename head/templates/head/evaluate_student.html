@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Evaluate Student</title></head>
+<body>
+  <h2>Evaluate Student Answers</h2>
+  <input type="number" id="studentId" placeholder="Enter Student ID">
+  <button onclick="loadAnswers()">Load Answers</button>
+  <div id="qaContainer"></div>
+  <button onclick="submitResult()">Submit Marks</button>
+
+  <script>
+    let marks = 0;
+    let userId = null;
+
+    function loadAnswers() {
+      userId = document.getElementById("studentId").value;
+      fetch(`/student/getStudentAnswers/?user_id=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          const box = document.getElementById("qaContainer");
+          box.innerHTML = "";
+          data.answers.forEach(ans => {
+            box.innerHTML += `<p><b>Q:</b> ${ans.question}</p><p><b>A:</b> ${ans.answer_text}</p><hr>`;
+          });
+        });
+    }
+
+    function submitResult() {
+      marks = prompt("Enter marks for student:");
+      fetch("/student/saveStudentResult/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, result_summary: `Marks: ${marks}` })
+      })
+      .then(res => res.json())
+      .then(data => alert("Result saved"));
+    }
+  </script>
+</body>
+</html>

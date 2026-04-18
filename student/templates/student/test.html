@@ -1,0 +1,512 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam in Progress - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Exam Header -->
+        <div class="col-12">
+            <div class="glass-card p-4 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h4 class="mb-1">
+                            <i class="bi bi-clipboard2-pulse text-primary"></i> Written Assessment
+                        </h4>
+                        <p class="text-muted mb-0">Answer all questions carefully</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="exam-timer">
+                            <div class="timer-display" id="timer">00:00:00</div>
+                            <small class="text-muted">Time Elapsed</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="progress-info">
+                            <h5 class="mb-1">
+                                <span id="currentQuestion">1</span> / <span id="totalQuestions">5</span>
+                            </h5>
+                            <div class="progress" style="height: 8px;">
+                                <div id="progressBar" class="progress-bar bg-success" style="width: 20%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Question Panel -->
+        <div class="col-lg-8">
+            <div class="glass-card p-5">
+                <!-- Question Navigation -->
+                <div class="question-nav mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-question-circle text-info"></i> Question <span id="questionNumber">1</span>
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <button id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" disabled>
+                                <i class="bi bi-arrow-left"></i> Previous
+                            </button>
+                            <button id="nextBtn" class="btn btn-outline-primary" onclick="nextQuestion()">
+                                Next <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Content -->
+                <div class="question-content mb-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body p-4">
+                            <div id="questionBox" class="question-text">
+                                <div class="text-center text-muted py-5">
+                                    <div class="spinner-border text-primary mb-3" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <h5>Loading question...</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Area -->
+                <div class="answer-section">
+                    <label for="answer" class="form-label">
+                        <i class="bi bi-pencil-square text-success"></i> Your Answer
+                    </label>
+                    <textarea 
+                        id="answer" 
+                        class="form-control answer-textarea" 
+                        placeholder="Type your detailed answer here..."
+                        rows="8"
+                        oninput="updateCharCount()"
+                    ></textarea>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Provide a comprehensive answer
+                        </small>
+                        <small class="text-muted">
+                            <span id="charCount">0</span> characters
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons mt-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-secondary btn-lg w-100" onclick="saveAndExit()">
+                                <i class="bi bi-save"></i> Save & Exit Later
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-gradient btn-lg w-100" onclick="submitExam()">
+                                <i class="bi bi-send-check"></i> Submit Exam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="col-lg-4">
+            <!-- Question Overview -->
+            <div class="glass-card p-4 mb-4">
+                <h6 class="mb-3">
+                    <i class="bi bi-grid-3x3-gap text-warning"></i> Question Overview
+                </h6>
+                <div id="questionGrid" class="question-grid">
+                    <!-- Question indicators will be populated here -->
+                </div>
+            </div>
+
+            <!-- Exam Stats -->
+            <div class="glass-card p-4 mb-4">
+                <h6 class="mb-3">
+                    <i class="bi bi-bar-chart text-info"></i> Exam Statistics
+                </h6>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Answered</span>
+                        <span class="badge bg-success" id="answeredCount">0</span>
+                    </div>
+                </div>
+                <div class="stat-item mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Remaining</span>
+                        <span class="badge bg-warning" id="remainingCount">0</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="d-flex justify-content-between">
+                        <span>Progress</span>
+                        <span class="badge bg-primary" id="progressPercent">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="glass-card p-4">
+                <h6 class="mb-3">
+                    <i class="bi bi-lightbulb text-warning"></i> Exam Tips
+                </h6>
+                <ul class="small">
+                    <li>Read each question carefully</li>
+                    <li>Provide detailed, structured answers</li>
+                    <li>Use examples when possible</li>
+                    <li>Review your answers before submitting</li>
+                    <li>Manage your time effectively</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-warning"></i> Submit Exam?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit your exam?</p>
+                <div class="alert alert-info">
+                    <strong>Exam Summary:</strong><br>
+                    Questions: <span id="modalAnswered">0</span> / <span id="modalTotal">0</span><br>
+                    Time: <span id="modalTime">00:00:00</span>
+                </div>
+                <p class="text-muted">Once submitted, you cannot modify your answers.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review Answers</button>
+                <button type="button" class="btn btn-primary" onclick="confirmSubmit()">Submit Exam</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let current = 0;
+    let questions = [];
+    let answers = {};
+    let startTime = Date.now();
+    let timerInterval;
+
+    const userId = "{{ user.userId|default:'' }}";
+
+    // Initialize exam
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!userId) {
+            showAlert('Student session not found. Please login again.', 'danger');
+            setTimeout(() => {
+                window.location.href = '/student/login/';
+            }, 1000);
+            return;
+        }
+        loadQuestions();
+        startTimer();
+    });
+
+    // Load all questions
+    function loadQuestions() {
+        showLoading();
+        fetch("/head/getAllQuestions/")
+            .then(res => res.json())
+            .then(data => {
+                questions = data;
+                document.getElementById('totalQuestions').textContent = questions.length;
+                document.getElementById('modalTotal').textContent = questions.length;
+                generateQuestionGrid();
+                showQuestion();
+                updateStats();
+                hideLoading();
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('Error loading questions. Please refresh the page.', 'danger');
+            });
+    }
+
+    // Generate question navigation grid
+    function generateQuestionGrid() {
+        const grid = document.getElementById('questionGrid');
+        grid.innerHTML = '';
+        
+        questions.forEach((q, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-outline-secondary question-btn mb-2 me-2';
+            btn.textContent = index + 1;
+            btn.onclick = () => goToQuestion(index);
+            btn.id = `q-btn-${index}`;
+            grid.appendChild(btn);
+        });
+    }
+
+    // Show current question
+    function showQuestion() {
+        const q = questions[current];
+        const questionBox = document.getElementById('questionBox');
+        
+        questionBox.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Loading question...</h5>
+            </div>
+        `;
+
+        fetch(`/student/viewQuestions/?id=${q.id}`)
+            .then(res => res.json())
+            .then(data => {
+                questionBox.innerHTML = `
+                    <h5 class="mb-3">Question ${current + 1}</h5>
+                    <p class="lead">${data.question}</p>
+                `;
+                document.getElementById("answer").value = answers[q.id] || "";
+                updateCharCount();
+                updateQuestionNav();
+                highlightCurrentQuestion();
+            })
+            .catch(error => {
+                questionBox.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Error loading question
+                    </div>
+                `;
+            });
+
+        // Update UI elements
+        document.getElementById('questionNumber').textContent = current + 1;
+        document.getElementById('currentQuestion').textContent = current + 1;
+        updateProgressBar();
+    }
+
+    // Navigation functions
+    function nextQuestion() {
+        saveAnswer();
+        if (current < questions.length - 1) {
+            current++;
+            showQuestion();
+        }
+    }
+
+    function prevQuestion() {
+        saveAnswer();
+        if (current > 0) {
+            current--;
+            showQuestion();
+        }
+    }
+
+    function goToQuestion(index) {
+        saveAnswer();
+        current = index;
+        showQuestion();
+    }
+
+    // Update question navigation buttons
+    function updateQuestionNav() {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        prevBtn.disabled = current === 0;
+        nextBtn.disabled = current === questions.length - 1;
+    }
+
+    // Highlight current question in grid
+    function highlightCurrentQuestion() {
+        document.querySelectorAll('.question-btn').forEach((btn, index) => {
+            btn.classList.remove('btn-primary', 'btn-success');
+            if (index === current) {
+                btn.classList.add('btn-primary');
+            } else if (answers[questions[index].id]) {
+                btn.classList.add('btn-success');
+            } else {
+                btn.classList.add('btn-outline-secondary');
+            }
+        });
+    }
+
+    // Save current answer
+    function saveAnswer() {
+        const qid = questions[current].id;
+        const answer = document.getElementById("answer").value;
+        answers[qid] = answer;
+        updateStats();
+        highlightCurrentQuestion();
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+        const progress = ((current + 1) / questions.length) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+    }
+
+    // Update statistics
+    function updateStats() {
+        const answered = Object.keys(answers).filter(qid => answers[qid].trim() !== '').length;
+        const remaining = questions.length - answered;
+        const progress = Math.round((answered / questions.length) * 100);
+
+        document.getElementById('answeredCount').textContent = answered;
+        document.getElementById('remainingCount').textContent = remaining;
+        document.getElementById('progressPercent').textContent = `${progress}%`;
+        document.getElementById('modalAnswered').textContent = answered;
+    }
+
+    // Character count
+    function updateCharCount() {
+        const count = document.getElementById("answer").value.length;
+        document.getElementById('charCount').textContent = count;
+    }
+
+    // Timer functions
+    function startTimer() {
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const hours = Math.floor(elapsed / 3600);
+        const minutes = Math.floor((elapsed % 3600) / 60);
+        const seconds = elapsed % 60;
+        
+        const display = 
+            String(hours).padStart(2, '0') + ':' +
+            String(minutes).padStart(2, '0') + ':' +
+            String(seconds).padStart(2, '0');
+        
+        document.getElementById('timer').textContent = display;
+        document.getElementById('modalTime').textContent = display;
+    }
+
+    // Submit exam
+    function submitExam() {
+        saveAnswer();
+        
+        const modal = new bootstrap.Modal(document.getElementById('submitModal'));
+        modal.show();
+    }
+
+    function confirmSubmit() {
+        if (!userId) {
+            showAlert('Student session not found. Please login again.', 'danger');
+            return;
+        }
+
+        showLoading();
+        
+        const promises = Object.entries(answers).map(([qid, ans]) =>
+            fetch("/student/submitAnswer/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    question_id: qid, 
+                    user_id: userId, 
+                    answer_text: ans 
+                })
+            })
+        );
+
+        Promise.all(promises)
+            .then(() => {
+                clearInterval(timerInterval);
+                window.location.href = "/student/thankyou";
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('Error submitting exam. Please try again.', 'danger');
+            });
+    }
+
+    function saveAndExit() {
+        if (confirm('Your progress will be saved. Are you sure you want to exit?')) {
+            saveAnswer();
+            localStorage.setItem('examAnswers', JSON.stringify(answers));
+            localStorage.setItem('examTime', Date.now() - startTime);
+            window.location.href = "/student/login/";
+        }
+    }
+</script>
+
+<style>
+.exam-timer {
+    text-align: center;
+}
+
+.timer-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #667eea;
+    font-family: 'Courier New', monospace;
+}
+
+.question-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.question-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.answer-textarea {
+    border-radius: 15px;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.answer-textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.stat-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.progress-info h5 {
+    color: #667eea;
+    font-weight: bold;
+}
+
+.question-text {
+    min-height: 100px;
+}
+
+.card {
+    border-radius: 15px;
+    border: none;
+}
+
+.btn-group .btn {
+    border-radius: 8px;
+}
+
+.modal-content {
+    border-radius: 20px;
+    border: none;
+}
+</style>
+{% endblock %}

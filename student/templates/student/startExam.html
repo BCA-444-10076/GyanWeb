@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Start Exam - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="glass-card p-5">
+            <!-- User Info Section -->
+            {% if user %}
+            <div class="user-info-card mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar me-3">
+                        <i class="bi bi-person-circle display-4 text-primary"></i>
+                    </div>
+                    <div class="user-details">
+                        <h5 class="mb-1">User Name :{{ user.userName }}</h5>
+                        <p class="text-muted mb-0">Student ID :{{ user.userId }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-clipboard-check display-1 text-success animate__animated animate__bounceIn"></i>
+                </div>
+                <h1 class="page-title">Welcome to Your Exam</h1>
+                <p class="text-muted">You're about to begin your AI-powered interview assessment</p>
+            </div>
+
+            <!-- Exam Instructions -->
+            <div class="alert alert-info mb-4">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle"></i> Before You Start
+                </h5>
+                <ul class="mb-0">
+                    <li>Ensure you have a stable internet connection</li>
+                    <li>Find a quiet environment for the best experience</li>
+                    <li>Make sure your microphone is working</li>
+                    <li>The exam will include both written and verbal components</li>
+                </ul>
+            </div>
+
+            <!-- Exam Features -->
+            <div class="row mb-4">
+                <div class="col-md-4 text-center mb-3">
+                    <div class="feature-box p-3">
+                        <i class="bi bi-pencil-square text-primary display-6 mb-2"></i>
+                        <h6>Written Test</h6>
+                        <small class="text-muted">Answer questions in writing</small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <div class="feature-box p-3">
+                        <i class="bi bi-mic-fill text-success display-6 mb-2"></i>
+                        <h6>Voice Interview</h6>
+                        <small class="text-muted">Speak with AI interviewer</small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <div class="feature-box p-3">
+                        <i class="bi bi-award text-warning display-6 mb-2"></i>
+                        <h6>Instant Results</h6>
+                        <small class="text-muted">Get immediate feedback</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Check -->
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-shield-check"></i> System Check
+                    </h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Microphone:</small>
+                            <span id="micCheck" class="badge bg-warning ms-1">Checking...</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Browser:</small>
+                            <span id="browserCheck" class="badge bg-success ms-1">Compatible</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <div class="text-center">
+                <button onclick="startExam()" class="btn btn-gradient btn-lg px-5">
+                    <i class="bi bi-play-circle"></i> Start Exam
+                </button>
+                <p class="text-muted mt-3">
+                    <small>Click to begin your assessment session</small>
+                </p>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="mt-4 pt-4 border-top text-center">
+                <small class="text-muted">
+                    <a href="/student/login/" class="text-decoration-none">
+                        <i class="bi bi-arrow-left"></i> Back to Login
+                    </a>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // System check functions
+    async function checkMicrophone() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            document.getElementById('micCheck').className = 'badge bg-success ms-1';
+            document.getElementById('micCheck').textContent = 'Working';
+        } catch (err) {
+            document.getElementById('micCheck').className = 'badge bg-danger ms-1';
+            document.getElementById('micCheck').textContent = 'Not Available';
+        }
+    }
+
+    function checkBrowser() {
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        const isFirefox = /Firefox/.test(navigator.userAgent);
+        const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+        
+        if (isChrome || isFirefox || isSafari) {
+            document.getElementById('browserCheck').className = 'badge bg-success ms-1';
+            document.getElementById('browserCheck').textContent = 'Compatible';
+        } else {
+            document.getElementById('browserCheck').className = 'badge bg-warning ms-1';
+            document.getElementById('browserCheck').textContent = 'Try Chrome/Firefox';
+        }
+    }
+
+    function startExam() {
+        showLoading();
+        // Add a small delay for better UX
+        setTimeout(() => {
+            window.location.href = "/student/test/";
+        }, 500);
+    }
+
+    // Run system checks on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkMicrophone();
+        checkBrowser();
+        
+        // Add hover effects to feature boxes
+        const featureBoxes = document.querySelectorAll('.feature-box');
+        featureBoxes.forEach(box => {
+            box.addEventListener('mouseenter', function() {
+                this.classList.add('animate__animated', 'animate__pulse');
+            });
+            box.addEventListener('mouseleave', function() {
+                this.classList.remove('animate__animated', 'animate__pulse');
+            });
+        });
+    });
+</script>
+
+<style>
+.user-info-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-radius: 15px;
+    padding: 15px 20px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-box {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.feature-box:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-5px);
+}
+
+.card {
+    border-radius: 15px;
+    border: none;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

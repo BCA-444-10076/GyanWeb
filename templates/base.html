@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GyanWeb - AI Interview Platform{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-bg: #1a1a2e;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,106.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            z-index: -1;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-container {
+            padding: 2rem 0;
+            min-height: calc(100vh - 76px);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-gradient {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-gradient:hover::before {
+            left: 100%;
+        }
+
+        .form-control, .form-select {
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .alert {
+            border-radius: 15px;
+            border: none;
+            font-weight: 500;
+        }
+
+        .page-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #667eea;
+        }
+
+        /* Side Panel Styles */
+        .side-panel {
+            position: fixed;
+            left: 0;
+            top: 0px;
+            width: 300px;
+            height: calc(100vh - 0px);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .side-panel-header {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .admin-avatar {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
+
+        .side-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 1rem;
+            padding: 0 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #495057;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            transform: translateX(5px);
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-item i {
+            font-size: 1.25rem;
+            margin-right: 1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item span {
+            font-weight: 500;
+            flex: 1;
+        }
+
+        
+        
+        .content-with-sidebar {
+            margin-left: 300px;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .content-full {
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .side-panel {
+                width: 280px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .side-panel.mobile-open {
+                transform: translateX(0);
+            }
+
+            .content-with-sidebar {
+                margin-left: 0;
+                padding: 1rem;
+                display: flex;
+                justify-content: center;
+            }
+
+            .content-full {
+                padding: 1rem;
+                display: flex;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .side-panel {
+                width: 280px;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        {% if request.path|slice:":5" == "/head" %}
+        <!-- Side Navigation -->
+        <div class="side-panel">
+            <div class="side-panel-header">
+                {% if request.path|slice:":5" == "/head" %}
+                    <div class="admin-avatar">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h6>Admin Panel</h6>
+                    <small class="text-muted">Management Console</small>
+                {% else %}
+                    <div class="admin-avatar">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <h6>Student Panel</h6>
+                    <small class="text-muted">Student Dashboard</small>
+                {% endif %}
+            </div>
+            
+            <!-- Mobile Toggle Button -->
+            <button class="btn btn-outline-secondary btn-sm mobile-toggle" onclick="toggleSidePanel()" style="display: none;">
+                <i class="bi bi-list"></i>
+            </button>
+            
+            <nav class="side-nav">
+                {% if request.path|slice:":5" == "/head" %}
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">User Management</h6>
+                        <a href="/head/create-user-page/" class="nav-item {% if 'create-user' in request.path %}active{% endif %}">
+                            <i class="bi bi-person-plus"></i>
+                            <span>Create Student</span>
+                        </a>
+                        <a href="/head/view-users-page/" class="nav-item {% if 'view-users' in request.path %}active{% endif %}">
+                            <i class="bi bi-people"></i>
+                            <span>View Students</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">Question Management</h6>
+                        <a href="/head/upload-question-page/" class="nav-item {% if 'upload-question' in request.path %}active{% endif %}">
+                            <i class="bi bi-cloud-upload"></i>
+                            <span>Upload Questions</span>
+                        </a>
+                        <a href="/head/view-questions-page/" class="nav-item {% if 'view-questions' in request.path %}active{% endif %}">
+                            <i class="bi bi-question-square"></i>
+                            <span>View Questions</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">Results</h6>
+                        <a href="/head/view-answers-page/" class="nav-item {% if 'view-answers' in request.path %}active{% endif %}">
+                            <i class="bi bi-clipboard-data"></i>
+                            <span>View Answers</span>
+                        </a>
+                        <a href="/head/interview-results/" class="nav-item {% if 'interview-results' in request.path %}active{% endif %}">
+                            <i class="bi bi-mic-fill"></i>
+                            <span>Interview Results</span>
+                        </a>
+                        <a href="/head/results/" class="nav-item {% if 'results' in request.path and 'interview-results' not in request.path %}active{% endif %}">
+                            <i class="bi bi-graph-up"></i>
+                            <span>Results</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">System</h6>
+                        <a href="/admin/" class="nav-item" target="_blank">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>Django Admin</span>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">Exam</h6>
+                        <a href="/student/viewQuestions/" class="nav-item {% if 'viewQuestions' in request.path %}active{% endif %}">
+                            <i class="bi bi-question-square"></i>
+                            <span>View Questions</span>
+                        </a>
+                        <a href="/student/startExam/" class="nav-item {% if 'startExam' in request.path %}active{% endif %}">
+                            <i class="bi bi-play-circle"></i>
+                            <span>Start Exam</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">Results</h6>
+                        <a href="/student/result/" class="nav-item {% if 'result' in request.path %}active{% endif %}">
+                            <i class="bi bi-award"></i>
+                            <span>My Results</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <h6 class="nav-section-title">Interview</h6>
+                        <a href="/student/interview/" class="nav-item {% if 'interview' in request.path %}active{% endif %}">
+                            <i class="bi bi-mic"></i>
+                            <span>AI Interview</span>
+                        </a>
+                    </div>
+                {% endif %}
+            </nav>
+
+                    </div>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <div class="{% if request.path|slice:":5" == "/head" %}content-with-sidebar{% else %}content-full{% endif %}">
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Utility functions
+        function showLoading() {
+            document.querySelector('.loading-spinner').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.querySelector('.loading-spinner').style.display = 'none';
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Side Panel Mobile Toggle
+        function toggleSidePanel() {
+            const sidePanel = document.querySelector('.side-panel');
+            if (sidePanel) {
+                sidePanel.classList.toggle('mobile-open');
+            }
+        }
+
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add mobile menu toggle if side panel exists
+            const sidePanel = document.querySelector('.side-panel');
+            if (sidePanel && window.innerWidth <= 768) {
+                // Add mobile toggle button to navbar
+                const navbar = document.querySelector('.navbar .container');
+                if (navbar) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'btn btn-outline-secondary ms-2';
+                    toggleBtn.innerHTML = '<i class="bi bi-list"></i>';
+                    toggleBtn.onclick = toggleSidePanel;
+                    navbar.appendChild(toggleBtn);
+                }
+            }
+        });
+
+        // Add fade-in animation to elements
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.glass-card');
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('fade-in');
+                }, index * 100);
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

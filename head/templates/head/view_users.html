@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+
+{% block title %}View Students - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="glass-card p-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="page-title">
+                    <i class="bi bi-people-fill"></i> Manage Students
+                </h3>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportUsers()">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="addStudent()">
+                        <i class="bi bi-person-plus"></i> Add Student
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search students by name or ID...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="bi bi-hash"></i> ID</th>
+                            <th><i class="bi bi-person"></i> Name</th>
+                            <th><i class="bi bi-calendar"></i> Created</th>
+                            <th><i class="bi bi-gear"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ user.userId }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ user.userName }}</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ user.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewStudentDetails('{{ user.userId }}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="editStudent('{{ user.userId }}')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('{{ user.userId }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-4"></i>
+                                <p>No students found</p>
+                                <button class="btn btn-primary" onclick="addStudent()">
+                                    <i class="bi bi-person-plus"></i> Add First Student
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link" href="#">1</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal fade" id="studentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-circle"></i> Student Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="studentDetails"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function viewStudentDetails(userId) {
+        showLoading();
+        
+        fetch(`/head/api/user/${userId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    // Display user details in modal
+                    const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+                    const detailsDiv = document.getElementById('studentDetails');
+                    
+                    detailsDiv.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>User ID:</strong> ${data.user.userId}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Username:</strong> ${data.user.userName}
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <strong>Password:</strong> ${data.user.password}
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.show();
+                } else {
+                    showAlert('Error fetching user details', 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('Network error occurred', 'danger');
+            });
+    }
+
+    function editStudent(userId) {
+        showLoading();
+        
+        fetch(`/head/api/user/${userId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    // Create edit form
+                    const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+                    const detailsDiv = document.getElementById('studentDetails');
+                    
+                    detailsDiv.innerHTML = `
+                        <form id="editUserForm">
+                            <div class="mb-3">
+                                <label class="form-label">User ID</label>
+                                <input type="text" class="form-control" value="${data.user.userId}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" id="editUserName" value="${data.user.userName}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="editUserPassword" value="${data.user.password}" required>
+                            </div>
+                        </form>
+                    `;
+                    
+                    // Change modal title and footer
+                    document.querySelector('#studentModal .modal-title').innerHTML = '<i class="bi bi-pencil-square"></i> Edit Student';
+                    document.querySelector('#studentModal .modal-footer').innerHTML = `
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveUserChanges('${userId}')">Save Changes</button>
+                    `;
+                    
+                    modal.show();
+                } else {
+                    showAlert('Error fetching user details', 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('Network error occurred', 'danger');
+            });
+    }
+
+    function saveUserChanges(userId) {
+        const userName = document.getElementById('editUserName').value.trim();
+        const userPassword = document.getElementById('editUserPassword').value.trim();
+        
+        if (!userName || !userPassword) {
+            showAlert('Username and password are required', 'warning');
+            return;
+        }
+        
+        showLoading();
+        
+        fetch(`/head/api/user/${userId}/update/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                userName: userName,
+                userPassword: userPassword
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showAlert(data.message, 'success');
+                // Close modal and refresh page
+                const modal = bootstrap.Modal.getInstance(document.getElementById('studentModal'));
+                modal.hide();
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert('Error updating user: ' + (data.error || 'Unknown error'), 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('Network error occurred', 'danger');
+        });
+    }
+
+    function deleteStudent(userId) {
+        if (confirm(`Are you sure you want to delete student with ID: ${userId}? This action cannot be undone.`)) {
+            showLoading();
+            
+            fetch(`/head/api/user/${userId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    // Remove row from table
+                    const row = document.querySelector(`button[onclick="deleteStudent('${userId}')"]`).closest('tr');
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                        updateUserCount();
+                    }, 300);
+                } else {
+                    showAlert('Error deleting user: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('Network error occurred', 'danger');
+            });
+        }
+    }
+
+    function updateUserCount() {
+        const rows = document.querySelectorAll('tbody tr').length;
+        const totalElement = document.getElementById('total_users');
+        if (totalElement) {
+            totalElement.textContent = rows;
+        }
+    }
+
+    function addStudent() {
+        window.location.href = '/head/create-user-page/';
+    }
+
+    function exportUsers() {
+        showLoading();
+        
+        fetch('/head/export-users/')
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Export failed');
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showAlert('Users exported successfully!', 'success');
+            })
+            .catch(error => {
+                showAlert('Error exporting users', 'danger');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+
+    function showLoading() {
+        const spinner = document.createElement('div');
+        spinner.className = 'loading-spinner';
+        spinner.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;';
+        spinner.innerHTML = '<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div>';
+        document.body.appendChild(spinner);
+    }
+
+    function hideLoading() {
+        const spinner = document.querySelector('.loading-spinner');
+        if (spinner) {
+            spinner.remove();
+        }
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>
+
+<style>
+.table {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.table th {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.modal-content {
+    border-radius: 20px;
+    border: none;
+}
+
+.pagination .page-link {
+    color: #667eea;
+}
+
+.pagination .page-link:hover {
+    background: var(--primary-gradient);
+    color: white;
+}
+</style>
+{% endblock %}

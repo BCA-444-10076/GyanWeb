@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Thank You - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="glass-card p-5">
+            <!-- User Info Section -->
+            {% if user %}
+            <div class="user-info-card mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar me-3">
+                        <i class="bi bi-person-circle display-4 text-primary"></i>
+                    </div>
+                    <div class="user-details">
+                        <h5 class="mb-1">User Name :{{ user.userName }}</h5>
+                        <p class="text-muted mb-0">Student ID :{{ user.userId }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    {% if from_interview %}
+                    <i class="bi bi-trophy-fill display-1 text-warning animate__animated animate__bounceIn"></i>
+                    {% else %}
+                    <i class="bi bi-check-circle display-1 text-success animate__animated animate__bounceIn"></i>
+                    {% endif %}
+                </div>
+                {% if from_interview %}
+                <h1 class="page-title">Interview Completed Successfully!</h1>
+                <p class="text-muted">Excellent work! You've completed your AI interview assessment</p>
+                {% else %}
+                <h1 class="page-title">Exam Submitted Successfully!</h1>
+                <p class="text-muted">Great job! You've completed your written assessment</p>
+                {% endif %}
+            </div>
+
+            <!-- Success Message -->
+            {% if from_interview %}
+            <div class="alert alert-success mb-4">
+                <h5 class="alert-heading">
+                    <i class="bi bi-trophy"></i> Congratulations!
+                </h5>
+                <p class="mb-0">Your AI interview has been completed and evaluated. Ready to see your results?</p>
+            </div>
+            {% else %}
+            <div class="alert alert-success mb-4">
+                <h5 class="alert-heading">
+                    <i class="bi bi-trophy"></i> Congratulations!
+                </h5>
+                <p class="mb-0">Your written exam has been submitted and is being processed. Ready for the next step?</p>
+            </div>
+            {% endif %}
+
+            <!-- Next Steps -->
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-arrow-right-circle"></i> What's Next?
+                    </h6>
+                    {% if from_interview %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-success me-3">
+                            <i class="bi bi-check2"></i> Completed
+                        </div>
+                        <span>Written Assessment</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-success me-3">
+                            <i class="bi bi-check2"></i> Completed
+                        </div>
+                        <span>AI Voice Interview</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="badge bg-primary me-3">
+                            <i class="bi bi-bar-chart"></i> Available Now
+                        </div>
+                        <span>View Your Results</span>
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-success me-3">
+                            <i class="bi bi-check2"></i> Completed
+                        </div>
+                        <span>Written Assessment</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-warning me-3">
+                            <i class="bi bi-clock"></i> Upcoming
+                        </div>
+                        <span>AI Voice Interview</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="badge bg-secondary me-3">
+                            <i class="bi bi-bar-chart"></i> Final
+                        </div>
+                        <span>Results & Feedback</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                {% if from_interview %}
+                <button onclick="viewResults()" class="btn btn-gradient btn-lg px-5 mb-3">
+                    <i class="bi bi-bar-chart"></i> View Your Results
+                </button>
+                <p class="text-muted">
+                    <small>Check your comprehensive assessment results and feedback</small>
+                </p>
+                {% else %}
+                <button onclick="startInterview()" class="btn btn-gradient btn-lg px-5 mb-3">
+                    <i class="bi bi-mic-fill"></i> Start AI Interview
+                </button>
+                <p class="text-muted">
+                    <small>Continue with your voice interview to complete the assessment</small>
+                </p>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <button onclick="logout()" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            {% if not from_interview %}
+            <!-- Interview Benefits -->
+            <div class="row mb-4">
+                <div class="col-md-6 text-center mb-3">
+                    <div class="benefit-box p-3">
+                        <i class="bi bi-mic-fill text-primary display-6 mb-2"></i>
+                        <h6>Voice Assessment</h6>
+                        <small class="text-muted">Showcase your communication skills</small>
+                    </div>
+                </div>
+                <div class="col-md-6 text-center mb-3">
+                    <div class="benefit-box p-3">
+                        <i class="bi bi-robot text-success display-6 mb-2"></i>
+                        <h6>AI Evaluation</h6>
+                        <small class="text-muted">Get instant, unbiased feedback</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tips for Interview -->
+            <div class="mt-4 pt-4 border-top">
+                <h6 class="text-center mb-3">
+                    <i class="bi bi-lightbulb text-warning"></i> Interview Tips
+                </h6>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle text-success"></i><br>
+                            Find a quiet place
+                        </small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle text-success"></i><br>
+                            Test your microphone
+                        </small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="bi bi-check-circle text-success"></i><br>
+                            Speak clearly
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preparation Modal -->
+<div class="modal fade" id="prepModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-mic-fill"></i> AI Interview Preparation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6>Before you start:</h6>
+                    <ul class="mb-0">
+                        <li>Ensure your microphone is working</li>
+                        <li>Find a quiet environment</li>
+                        <li>The interview will take approximately 10-15 minutes</li>
+                        <li>Answer honestly and naturally</li>
+                    </ul>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="micCheck">
+                    <label class="form-check-label" for="micCheck">
+                        I have tested my microphone
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="envCheck">
+                    <label class="form-check-label" for="envCheck">
+                        I am in a quiet environment
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="readyCheck">
+                    <label class="form-check-label" for="readyCheck">
+                        I am ready to begin
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="startInterviewBtn" disabled>Start Interview</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function startInterview() {
+        // Show preparation modal
+        const modal = new bootstrap.Modal(document.getElementById('prepModal'));
+        modal.show();
+    }
+
+    function viewResults() {
+        window.location.href = "/student/result/";
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            // Clear session data
+            fetch('/student/logout/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(() => {
+                window.location.href = "/student/login/";
+            })
+            .catch(error => {
+                // Fallback if logout endpoint doesn't work
+                window.location.href = "/student/login/";
+            });
+        }
+    }
+
+    // Modal checkbox handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = ['micCheck', 'envCheck', 'readyCheck'];
+        const startBtn = document.getElementById('startInterviewBtn');
+        
+        checkboxes.forEach(id => {
+            document.getElementById(id).addEventListener('change', function() {
+                const allChecked = checkboxes.every(id => document.getElementById(id).checked);
+                startBtn.disabled = !allChecked;
+            });
+        });
+
+        startBtn.addEventListener('click', function() {
+            showLoading();
+            setTimeout(() => {
+                window.location.href = "/student/interview/";
+            }, 500);
+        });
+
+        // Add hover effects to benefit boxes
+        const benefitBoxes = document.querySelectorAll('.benefit-box');
+        benefitBoxes.forEach(box => {
+            box.addEventListener('mouseenter', function() {
+                this.classList.add('animate__animated', 'animate__pulse');
+            });
+            box.addEventListener('mouseleave', function() {
+                this.classList.remove('animate__animated', 'animate__pulse');
+            });
+        });
+    });
+</script>
+
+<style>
+.user-info-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-radius: 15px;
+    padding: 15px 20px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.benefit-box {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.benefit-box:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-5px);
+}
+
+.card {
+    border-radius: 15px;
+    border: none;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+</style>
+{% endblock %}

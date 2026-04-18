@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Questions - GyanWeb{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-question-square-fill display-1 text-info"></i>
+                </div>
+                <h1 class="page-title">Upload Interview Questions</h1>
+                <p class="text-muted">Add questions for the AI interview system</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Questions</h5>
+                            <h2 id="questionCount" class="mb-0">1</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Active</h5>
+                            <h2 id="activeCount" class="mb-0">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Characters</h5>
+                            <h2 id="charCount" class="mb-0">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Marks</h5>
+                            <h2 id="totalMarks" class="mb-0">0</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Container -->
+            <div id="questionContainer" class="mb-4">
+                <div class="question-item mb-3 animate__animated animate__fadeIn">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary">Question 1</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion(this)" style="display: none;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <textarea class="form-control question-textarea" placeholder="Enter your interview question here..." rows="3"></textarea>
+                            <div class="row mt-3">
+                                <div class="col-md-8">
+                                    <small class="text-muted">
+                                        <span class="char-count">0</span> characters
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-trophy"></i> Marks
+                                        </span>
+                                        <input type="number" class="form-control question-marks" min="1" max="100" value="10" placeholder="10">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                <button class="btn btn-outline-primary" onclick="addQuestion()">
+                    <i class="bi bi-plus-circle"></i> Add Question
+                </button>
+                <button class="btn btn-outline-danger" onclick="removeLastQuestion()">
+                    <i class="bi bi-dash-circle"></i> Remove Last
+                </button>
+                <button class="btn btn-gradient" onclick="submitQuestions()">
+                    <i class="bi bi-cloud-upload"></i> Save All Questions
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row text-center mt-4 pt-4 border-top">
+                <div class="col-md-3 col-6 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="addTemplate('technical')">
+                        <i class="bi bi-code-slash"></i> Add Technical
+                    </button>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="addTemplate('behavioral')">
+                        <i class="bi bi-people"></i> Add Behavioral
+                    </button>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="addTemplate('situational')">
+                        <i class="bi bi-lightbulb"></i> Add Situational
+                    </button>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-warning w-100" onclick="clearAll()">
+                        <i class="bi bi-x-circle"></i> Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-success">
+                    <i class="bi bi-check-circle-fill"></i> Questions Uploaded Successfully!
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your interview questions have been saved to the database.</p>
+                <div id="uploadSummary"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.location.href='/head/create-user-page/'">Create Student</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let questionNumber = 1;
+
+    function updateStats() {
+        const questions = document.querySelectorAll('.question-textarea');
+        const marksInputs = document.querySelectorAll('.question-marks');
+        const activeQuestions = Array.from(questions).filter(q => q.value.trim() !== '');
+        const totalChars = Array.from(questions).reduce((sum, q) => sum + q.value.length, 0);
+        const totalMarks = Array.from(marksInputs).reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+        
+        document.getElementById('questionCount').textContent = questions.length;
+        document.getElementById('activeCount').textContent = activeQuestions.length;
+        document.getElementById('charCount').textContent = totalChars;
+        document.getElementById('totalMarks').textContent = totalMarks;
+    }
+
+    function updateCharCount(textarea) {
+        const charCount = textarea.value.length;
+        const charCountSpan = textarea.closest('.card-body').querySelector('.char-count');
+        if (charCountSpan) {
+            charCountSpan.textContent = charCount;
+        }
+        updateStats();
+    }
+
+    function addQuestion() {
+        questionNumber++;
+        const container = document.getElementById("questionContainer");
+        const questionDiv = document.createElement("div");
+        questionDiv.className = "question-item mb-3 animate__animated animate__fadeIn";
+        questionDiv.innerHTML = `
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-primary">Question ${questionNumber}</span>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion(this)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <textarea class="form-control question-textarea" placeholder="Enter your interview question here..." rows="3" oninput="updateCharCount(this)"></textarea>
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <small class="text-muted">
+                                <span class="char-count">0</span> characters
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">
+                                    <i class="bi bi-trophy"></i> Marks
+                                </span>
+                                <input type="number" class="form-control question-marks" min="1" max="100" value="10" placeholder="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(questionDiv);
+        
+        // Add event listener to the new marks input
+        const newMarksInput = questionDiv.querySelector('.question-marks');
+        if (newMarksInput) {
+            newMarksInput.addEventListener('input', updateStats);
+        }
+        
+        updateStats();
+        updateRemoveButtons();
+    }
+
+    function removeQuestion(button) {
+        const questionItem = button.closest('.question-item');
+        questionItem.classList.add('animate__animated', 'animate__fadeOut');
+        setTimeout(() => {
+            questionItem.remove();
+            updateQuestionNumbers();
+            updateStats();
+            updateRemoveButtons();
+        }, 500);
+    }
+
+    function removeLastQuestion() {
+        const container = document.getElementById("questionContainer");
+        if (container.children.length > 1) {
+            const lastQuestion = container.lastElementChild;
+            lastQuestion.classList.add('animate__animated', 'animate__fadeOut');
+            setTimeout(() => {
+                lastQuestion.remove();
+                updateQuestionNumbers();
+                updateStats();
+                updateRemoveButtons();
+            }, 500);
+        }
+    }
+
+    function updateQuestionNumbers() {
+        const questions = document.querySelectorAll('.question-item');
+        questions.forEach((q, index) => {
+            const badge = q.querySelector('.badge');
+            if (badge) {
+                badge.textContent = `Question ${index + 1}`;
+            }
+        });
+        questionNumber = questions.length;
+    }
+
+    function updateRemoveButtons() {
+        const questions = document.querySelectorAll('.question-item');
+        questions.forEach((q, index) => {
+            const removeBtn = q.querySelector('button[onclick*="removeQuestion"]');
+            if (removeBtn) {
+                removeBtn.style.display = questions.length > 1 ? 'block' : 'none';
+            }
+        });
+    }
+
+    function addTemplate(type) {
+        const templates = {
+            technical: "Describe a challenging technical problem you solved and walk me through your approach.",
+            behavioral: "Tell me about a time when you had to work with a difficult team member. How did you handle it?",
+            situational: "If you were faced with a tight deadline and multiple competing priorities, how would you manage your time?"
+        };
+        
+        addQuestion();
+        const lastTextarea = document.querySelector('.question-textarea:last-child');
+        if (lastTextarea) {
+            lastTextarea.value = templates[type];
+            updateCharCount(lastTextarea);
+        }
+    }
+
+    function clearAll() {
+        if (confirm('Are you sure you want to clear all questions?')) {
+            const container = document.getElementById("questionContainer");
+            container.innerHTML = `
+                <div class="question-item mb-3 animate__animated animate__fadeIn">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary">Question 1</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuestion(this)" style="display: none;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <textarea class="form-control question-textarea" placeholder="Enter your interview question here..." rows="3" oninput="updateCharCount(this)"></textarea>
+                            <div class="row mt-3">
+                                <div class="col-md-8">
+                                    <small class="text-muted">
+                                        <span class="char-count">0</span> characters
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-trophy"></i> Marks
+                                        </span>
+                                        <input type="number" class="form-control question-marks" min="1" max="100" value="10" placeholder="10">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            questionNumber = 1;
+            updateStats();
+        }
+    }
+
+    function submitQuestions() {
+        const textareas = document.querySelectorAll(".question-textarea");
+        const marksInputs = document.querySelectorAll(".question-marks");
+        const questions = [];
+
+        textareas.forEach((area, index) => {
+            const questionText = area.value.trim();
+            const marks = parseInt(marksInputs[index].value) || 10;
+            if (questionText !== "") {
+                questions.push({ 
+                    question: questionText,
+                    marks: marks
+                });
+            }
+        });
+
+        if (questions.length === 0) {
+            showAlert("Please enter at least one question.", 'warning');
+            return;
+        }
+
+        showLoading();
+
+        fetch("/head/upload-question/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: JSON.stringify(questions)
+        })
+        .then(res => res.json())
+        .then(data => {
+            hideLoading();
+            if (data.message) {
+                document.getElementById('uploadSummary').innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>Summary:</strong><br>
+                        Questions uploaded: ${questions.length}<br>
+                        Total characters: ${questions.reduce((sum, q) => sum + q.question.length, 0)}<br>
+                        Total marks: ${questions.reduce((sum, q) => sum + q.marks, 0)}
+                    </div>
+                `;
+                const modal = new bootstrap.Modal(document.getElementById('successModal'));
+                modal.show();
+            } else {
+                showAlert("Error saving questions. Please try again.", 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert("Network error. Please try again.", 'danger');
+        });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStats();
+        updateRemoveButtons();
+        
+        // Add character count listener to existing textarea
+        const existingTextarea = document.querySelector('.question-textarea');
+        if (existingTextarea) {
+            existingTextarea.addEventListener('input', function() {
+                updateCharCount(this);
+            });
+        }
+        
+        // Add marks input listener to existing marks input
+        const existingMarksInput = document.querySelector('.question-marks');
+        if (existingMarksInput) {
+            existingMarksInput.addEventListener('input', updateStats);
+        }
+    });
+</script>
+{% endblock %}

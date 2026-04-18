@@ -1,0 +1,578 @@
+{% extends 'base.html' %}
+
+{% block title %}GyanWeb - AI-Powered Interview & Assessment Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section Styles */
+    .hero-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,106.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+        background-size: cover;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        color: white;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .hero-subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        animation: fadeInUp 1s ease-out 0.2s both;
+    }
+
+    .hero-description {
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto 3rem;
+        opacity: 0.9;
+        line-height: 1.8;
+        animation: fadeInUp 1s ease-out 0.4s both;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 1s ease-out 0.6s both;
+    }
+
+    .btn-hero {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-hero-primary {
+        background: white;
+        color: #667eea;
+    }
+
+    .btn-hero-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        color: #667eea;
+    }
+
+    .btn-hero-secondary {
+        background: transparent;
+        color: white;
+        border-color: white;
+    }
+
+    .btn-hero-secondary:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 100px 0;
+        background: white;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .section-subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #6c757d;
+        margin-bottom: 4rem;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        height: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        border-color: #667eea;
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+
+    .feature-description {
+        color: #6c757d;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+    /* Stats Section */
+    .stats-section {
+        padding: 80px 0;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 1.1rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Login Cards Section */
+    .login-section {
+        padding: 100px 0;
+        background: white;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 25px;
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-align: center;
+        height: 100%;
+    }
+
+    .login-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 80px rgba(102, 126, 234, 0.3);
+        border-color: #667eea;
+    }
+
+    .login-card.student {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .login-card.head {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .login-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 3rem;
+        color: white;
+    }
+
+    .login-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .login-description {
+        margin-bottom: 2rem;
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    .btn-login {
+        background: white;
+        color: #667eea;
+        padding: 15px 40px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        color: #667eea;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-hero {
+            width: 250px;
+            justify-content: center;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+        }
+    }
+
+    /* Floating animation */
+    .float-animation {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    /* Pulse animation for CTA buttons */
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+        70% { box-shadow: 0 0 0 20px rgba(102, 126, 234, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <i class="bi bi-mortarboard-fill me-3"></i>GyanWeb
+            </h1>
+            <p class="hero-subtitle">AI-Powered Interview & Assessment Platform</p>
+            <p class="hero-description">
+                Transform your hiring and learning process with intelligent AI interviews, 
+                automated assessments, and comprehensive analytics. Experience the future of 
+                talent evaluation today.
+            </p>
+            <div class="hero-buttons">
+                <a href="/student/login/" class="btn-hero btn-hero-primary pulse-animation">
+                    <i class="bi bi-person-fill"></i>
+                    Student Login
+                </a>
+                <a href="/head/create-user-page/" class="btn-hero btn-hero-secondary">
+                    <i class="bi bi-shield-fill"></i>
+                    Admin Portal
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">Powerful Features</h2>
+        <p class="section-subtitle">Everything you need for modern assessment and interviews</p>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h3 class="feature-title">AI Interviews</h3>
+                    <p class="feature-description">
+                        Conduct intelligent voice-based interviews with natural language processing 
+                        and real-time evaluation. Our AI provides personalized questions and 
+                        comprehensive feedback.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <h3 class="feature-title">Automated Assessment</h3>
+                    <p class="feature-description">
+                        Create and manage custom assessments with automatic grading. 
+                        Support for multiple question types and detailed performance analytics.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h3 class="feature-title">Advanced Analytics</h3>
+                    <p class="feature-description">
+                        Track performance metrics, identify trends, and gain insights 
+                        into candidate capabilities with comprehensive dashboards and reports.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h3 class="feature-title">User Management</h3>
+                    <p class="feature-description">
+                        Efficiently manage students and administrators with role-based access 
+                        control and secure authentication systems.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3 class="feature-title">Secure Platform</h3>
+                    <p class="feature-description">
+                        Enterprise-grade security with data encryption, secure authentication, 
+                        and compliance with industry standards.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-lightning-fill"></i>
+                    </div>
+                    <h3 class="feature-title">Real-time Processing</h3>
+                    <p class="feature-description">
+                        Experience instant feedback and real-time evaluation with our 
+                        high-performance AI processing engine.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <h2 class="section-title">Platform Impact</h2>
+        <p class="section-subtitle">Numbers that speak for themselves</p>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_students }}</div>
+                    <div class="stat-label">Active Students</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_questions }}</div>
+                    <div class="stat-label">Questions Bank</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ completed_exams }}</div>
+                    <div class="stat-label">Completed Exams</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ completed_interviews }}</div>
+                    <div class="stat-label">AI Interviews</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Login Section -->
+<section class="login-section">
+    <div class="container">
+        <h2 class="section-title">Get Started Today</h2>
+        <p class="section-subtitle">Choose your role to begin your journey</p>
+        
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="login-card student float-animation">
+                    <div class="login-icon">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <h3 class="login-title">Student Portal</h3>
+                    <p class="login-description">
+                        Access your assessments, take AI interviews, view your results, 
+                        and track your progress. Experience personalized learning and 
+                        skill evaluation.
+                    </p>
+                    <a href="/student/login/" class="btn-login">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Login as Student
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="login-card head float-animation" style="animation-delay: 0.5s;">
+                    <div class="login-icon">
+                        <i class="bi bi-shield-fill"></i>
+                    </div>
+                    <h3 class="login-title">Admin Portal</h3>
+                    <p class="login-description">
+                        Manage students, create assessments, upload questions, 
+                        view analytics, and monitor platform performance. 
+                        Full control over the assessment ecosystem.
+                    </p>
+                    <a href="/head/create-user-page/" class="btn-login">
+                        <i class="bi bi-gear-fill"></i>
+                        Access Admin Panel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer Section -->
+<footer class="py-5 bg-dark text-white">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="bi bi-mortarboard-fill me-2"></i>GyanWeb</h5>
+                <p class="text-muted">
+                    Advanced AI-powered interview and assessment platform for modern education and recruitment.
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h5>Quick Links</h5>
+                <div class="d-flex flex-column flex-md-row gap-3 justify-content-md-end">
+                    <a href="/student/login/" class="text-white text-decoration-none">
+                        <i class="bi bi-person me-1"></i> Student Login
+                    </a>
+                    <a href="/head/create-user-page/" class="text-white text-decoration-none">
+                        <i class="bi bi-shield me-1"></i> Admin Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+        <hr class="my-4 bg-secondary">
+        <div class="text-center">
+            <p class="mb-0 text-muted">© 2024 GyanWeb. All rights reserved. | Powered by AI Technology</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}

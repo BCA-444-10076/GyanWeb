@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Login - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-person-circle display-1 text-primary"></i>
+                </div>
+                <h1 class="page-title">Student Login</h1>
+                <p class="text-muted">Access your AI interview session</p>
+            </div>
+
+            <form id="loginForm" autocomplete="off">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="userId" class="form-label">
+                        <i class="bi bi-person-badge"></i> Student ID
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-person-badge"></i>
+                        </span>
+                        <input type="text" class="form-control" id="userId" name="student_login_id" placeholder="Enter your Student ID" inputmode="numeric" pattern="[0-9]+" autocomplete="off" required>
+                    </div>
+                    <small class="text-muted">Use your assigned student ID to login</small>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label">
+                        <i class="bi bi-lock"></i> Password
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-key"></i>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="student_login_password" placeholder="Enter your password" autocomplete="new-password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-gradient btn-lg">
+                        <i class="bi bi-box-arrow-in-right"></i> Login to Interview
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-4">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="feature-item">
+                            <i class="bi bi-mic-fill text-primary"></i>
+                            <small class="d-block text-muted">Voice Interview</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="feature-item">
+                            <i class="bi bi-robot text-success"></i>
+                            <small class="d-block text-muted">AI Powered</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="feature-item">
+                            <i class="bi bi-clock-history text-info"></i>
+                            <small class="d-block text-muted">Real-time</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="instructionsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle"></i> Interview Instructions
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Before you start:</h6>
+                <ul>
+                    <li>Ensure you have a working microphone</li>
+                    <li>Find a quiet environment for the interview</li>
+                    <li>Speak clearly and answer honestly</li>
+                    <li>The AI will ask questions and evaluate your responses</li>
+                </ul>
+                <h6>During the interview:</h6>
+                <ul>
+                    <li>Listen carefully to each question</li>
+                    <li>Take your time to respond</li>
+                    <li>The system will record your answers</li>
+                    <li>You'll receive feedback after completion</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.addEventListener('pageshow', function() {
+        document.getElementById('loginForm').reset();
+    });
+
+    const userIdInput = document.getElementById('userId');
+    const passwordInput = document.getElementById('password');
+
+    userIdInput.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+    });
+
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const icon = this.querySelector('i');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const userId = userIdInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!/^\d+$/.test(userId)) {
+            showAlert("Student ID must contain only numbers.", 'warning');
+            userIdInput.focus();
+            return;
+        }
+
+        showLoading();
+
+        fetch("/student/userLogin/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                id: userId,
+                password: password,
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            hideLoading();
+            if (data.userId) {
+                showAlert("Login successful! Redirecting...", 'success');
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const nextUrl = urlParams.get('next');
+
+                if (nextUrl && nextUrl !== '/student/login/') {
+                    window.location.href = nextUrl;
+                } else {
+                    const modal = new bootstrap.Modal(document.getElementById('instructionsModal'));
+                    modal.show();
+
+                    document.getElementById('instructionsModal').addEventListener('hidden.bs.modal', function () {
+                        window.location.href = '/student/startExam/';
+                    });
+                }
+            } else {
+                showAlert("Invalid student ID or password. Please try again.", 'danger');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert("Network error. Please try again.", 'danger');
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const featureItems = document.querySelectorAll('.feature-item');
+        featureItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.classList.add('animate__animated', 'animate__pulse');
+            });
+            item.addEventListener('mouseleave', function() {
+                this.classList.remove('animate__animated', 'animate__pulse');
+            });
+        });
+    });
+</script>
+
+<style>
+.feature-item {
+    padding: 10px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+.feature-item i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.input-group-text {
+    background: rgba(102, 126, 234, 0.1);
+    border: 2px solid #e0e0e0;
+    border-right: none;
+}
+
+.form-control:focus + .input-group-text,
+.form-control:focus ~ .input-group-text {
+    border-color: #667eea;
+}
+
+#togglePassword {
+    border: 2px solid #e0e0e0;
+    border-left: none;
+}
+
+#togglePassword:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+</style>
+{% endblock %}

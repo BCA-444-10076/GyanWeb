@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Interview Transcript</title></head>
+<body>
+  <h2>Interview Review</h2>
+  <input type="number" id="studentId" placeholder="Enter Student ID">
+  <button onclick="loadInterview()">View Interview</button>
+  <div id="interviewBox"></div>
+
+  <script>
+    function loadInterview() {
+      const uid = document.getElementById("studentId").value;
+      fetch(`/student/getInterviewTranscript/?user_id=${uid}`)
+        .then(res => res.json())
+        .then(data => {
+          const box = document.getElementById("interviewBox");
+          box.innerHTML = "<h3>Interview Q&A</h3>";
+          data.qa.forEach(item => {
+            box.innerHTML += `<p><b>Q:</b> ${item.question}</p><p><b>A:</b> ${item.answer}</p><hr>`;
+          });
+
+          if (data.result_summary) {
+            box.innerHTML += `<h3>Interview Result</h3><p>${data.result_summary}</p>`;
+          }
+        });
+    }
+  </script>
+</body>
+</html>

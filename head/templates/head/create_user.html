@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Student User - GyanWeb{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-person-plus-fill display-1 text-primary"></i>
+                </div>
+                <h1 class="page-title">Create New Student</h1>
+                <p class="text-muted">Add a new student to the interview system</p>
+            </div>
+
+            <form id="createUserForm" autocomplete="off">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="userName" class="form-label">
+                        <i class="bi bi-person"></i> Student Name
+                    </label>
+                    <input type="text" class="form-control" id="userName" name="student_name" placeholder="Enter Student Name" pattern="[A-Za-z ]+" title="Student name should contain only alphabets" autocomplete="off" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="userId" class="form-label">
+                        <i class="bi bi-hash"></i> Student ID
+                    </label>
+                    <input type="text" class="form-control" id="userId" name="student_id" placeholder="Enter Student ID" inputmode="numeric" pattern="[0-9]+" title="Student ID should contain only numbers" autocomplete="off" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="userPassword" class="form-label">
+                        <i class="bi bi-lock"></i> Password
+                    </label>
+                    <input type="password" class="form-control" id="userPassword" name="new_student_password" placeholder="Enter Password" autocomplete="new-password" required>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-gradient btn-lg">
+                        <i class="bi bi-person-plus"></i> Create User
+                    </button>
+                </div>
+            </form>
+
+            <div id="message" class="mt-4"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.addEventListener("pageshow", function() {
+        document.getElementById("createUserForm").reset();
+    });
+
+    const userNameInput = document.getElementById("userName");
+    const userIdInput = document.getElementById("userId");
+
+    userNameInput.addEventListener("input", function() {
+        this.value = this.value.replace(/[^A-Za-z ]/g, "");
+    });
+
+    userIdInput.addEventListener("input", function() {
+        this.value = this.value.replace(/\D/g, "");
+    });
+
+    document.getElementById("createUserForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const userName = userNameInput.value.trim();
+        const userId = userIdInput.value.trim();
+
+        if (!/^[A-Za-z ]+$/.test(userName)) {
+            showAlert("Student name must contain only alphabets.", 'warning');
+            userNameInput.focus();
+            return;
+        }
+
+        if (!/^\d+$/.test(userId)) {
+            showAlert("Student ID must contain only numbers.", 'warning');
+            userIdInput.focus();
+            return;
+        }
+        
+        showLoading();
+
+        fetch("/head/create-user/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                userName: userName,
+                userId: userId,
+                userPassword: document.getElementById("userPassword").value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            hideLoading();
+            if (data.message) {
+                showAlert(`${data.message}`, 'success');
+                document.getElementById("createUserForm").reset();
+            } else {
+                const errorMessage = data.userName ? data.userName[0] : data.userId ? data.userId[0] : "Something went wrong. Please try again.";
+                showAlert(errorMessage, 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert("Network error. Please try again.", 'danger');
+        });
+    });
+</script>
+{% endblock %}
